@@ -461,7 +461,9 @@
 
 <script>
   // ── CONFIG ─────────────────────────────────────────────────────────────────
-  const BASE_URL = 'https://Flare26.github.io/LivePosters-Palace';
+  const BASE_URL = location.hostname === '' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+  ? '.'   // local dev — resolve relative to index.html
+  : 'https://Flare26.github.io/LivePosters-Palace';
 
   // The world reads this file to know how many posters to pull from the pool.
   // Store a plain number (e.g. "6") in postercount.txt at the repo root.
