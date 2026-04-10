@@ -469,6 +469,70 @@
       letter-spacing: 0.15em;
     }
 
+    /* -- Lightbox -- */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      padding: 40px;
+    }
+    .lightbox.open {
+      display: flex;
+    }
+    .lightbox-img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 0 80px rgba(0, 212, 255, 0.15);
+      cursor: default;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 28px;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .lightbox-close:hover {
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .lightbox-label {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      background: rgba(13, 16, 32, 0.8);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .card-img {
+      cursor: zoom-in;
+    }
+
     /* -- Footer -- */
     footer {
       margin-top: 64px;
@@ -567,6 +631,12 @@
 
 </div>
 
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close">ESC</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+  <div class="lightbox-label" id="lightbox-label"></div>
+</div>
+
 <script>
   // -- CONFIG --
   const BASE_URL = location.hostname === '' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'
@@ -634,7 +704,7 @@
 
       img.onload = () => {
         const oversize = img.naturalWidth > 2048 || img.naturalHeight > 2048;
-        const dims = oversize ? `${img.naturalWidth}x${img.naturalHeight}` : null;
+        const dims = `${img.naturalWidth} x ${img.naturalHeight}`;
         discovered[type].push({ index: i, url, filePath, oversize, dims });
         // Sort by index to maintain order
         discovered[type].sort((a, b) => a.index - b.index);
@@ -690,7 +760,7 @@
       card.innerHTML = `
         <div class="slot-id">${slotId}</div>
         <div class="card-body">
-          <div class="card-title">Poster ${type}${entry.index}</div>
+          <div class="card-title">Poster ${type}${entry.index} — ${entry.dims}</div>
           <div class="card-footer">
             <div class="card-url">${entry.filePath}</div>
             <button class="copy-btn" data-url="${entry.url}">COPY URL</button>
@@ -739,6 +809,47 @@
         btn.classList.remove('copied');
       }, 2000);
     });
+  });
+
+  // -- Lightbox --
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxLabel = document.getElementById('lightbox-label');
+
+  function openLightbox(src, label) {
+    lightboxImg.src = src;
+    lightboxLabel.textContent = label;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+  }
+
+  // Click on card image to open
+  document.addEventListener('click', e => {
+    const img = e.target.closest('.card-img');
+    if (!img) return;
+    const card = img.closest('.card');
+    const title = card.querySelector('.card-title')?.textContent || '';
+    openLightbox(img.src, title);
+  });
+
+  // Click backdrop or close button to dismiss
+  lightbox.addEventListener('click', e => {
+    if (e.target === lightbox || e.target.closest('.lightbox-close')) {
+      closeLightbox();
+    }
+  });
+
+  // Escape key to dismiss
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+      closeLightbox();
+    }
   });
 
   // -- Timestamp --
